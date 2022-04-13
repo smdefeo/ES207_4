@@ -1,0 +1,158 @@
+---
+title: "Defeo ES207_4"
+author: "Shelby Defeo"
+date: "4/13/2022"
+output: html_document
+---
+
+1. Conduct a t-test using the “head corn” yield data shown below. Can you guess/explain where the 14:1 odds come from?
+The 14:1 odds may come from an examination of the p value, wich is 0.9391. With 14:1 odds, you have a 93% probability of one outcome happening.
+```{r}
+# 1. Conduct a t-test using the “head corn” yield data shown below. Can you guess/explain where the 14:1 odds come from?
+
+# Ho: The two types of seed will have no difference in mean yields.
+#Ha: Kiln dried seeds will have a greater mean yield than non kild dried seeds.
+
+
+#Add in data
+NKD <- c(1903, 1935, 1910, 2496, 2108, 1961, 2060, 1444, 1612, 1316, 1511)
+NKD
+
+KD <- c(2009, 1915, 2011, 2463, 2180, 1925, 2122, 1482, 1542, 1443, 1535)
+KD
+
+##Testing assumptions##
+
+#Normality
+qqnorm(NKD)
+qqline(NKD)
+
+qqnorm(KD)
+qqline(KD)
+
+
+#Equal variance
+s1_NKD <- sd(NKD)
+s1_NKD
+
+s1_KD <- sd(NKD)
+s1_KD
+
+VR_1 = s1_NKD/s1_KD
+VR_1 # variance ratio; also determines whether to use Welch's or pooled. There is a large varianc
+
+#Conduct T test
+t.test(NKD, KD, alternative = c("greater"), mu = 0, paired = TRUE, var.equal = TRUE, conf.level = 0.95)
+```
+2. Test whether the wells downgradient of remediation are significantly lower in molybdenum than the upgradient wells. Also test whether the mean concentration has changed with remediation
+The downgradient wells are not significantly lower in molybdenum because the p value of 0.06981 is greater than the alpha I chose of 0.05 so we accept the null hypothesis that there is no difference.
+```{r}
+#2. Test whether the wells downgradient of remediation are significantly lower in molybdenum than the upgradient wells. Also test whether the mean concentration has changed with remediation
+
+#Hypotheses
+#Ho: There is no difference in the mean concentrations of the upgradient and down gradient sites.
+#Ha: The mean concentration of the downgradient wells is significantly lower than the upgradient wells. (u_DG - u_UG < 0)
+
+
+#Add data
+DG <- c(0.850, 0.390, 0.320, 0.300, 0.300, 0.205, 0.200, 0.200, 0.140, 0.140, 0.090, 0.046, 0.035)
+DG
+
+UG <- c(6.900, 3.200, 1.700)
+UG
+
+##Testing assumptions##
+
+#Normality
+qqnorm(DG)
+qqline(DG)
+
+qqnorm(UG)
+qqline(UG)
+
+
+#Equal variance
+s2_UG <- sd(UG)
+s2_UG
+
+s2_DG <- sd(DG)
+s2_DG
+
+VR_2 = s2_UG/s2_DG
+VR_2 # variance ratio; also determines whether to use Welch's or pooled
+
+
+#are the wells downgradient of remediation are significantly lower in molybdenum than the upgradient wells?
+t.test(DG, UG, alternative = c("less"), mu = 0, paired = FALSE, var.equal = FALSE, conf.level = 0.95)
+ 
+```
+
+3. Does the North Fork, which drains terrain with calcareous (more soluble) minerals have higher conductance than the South Fork, which drains terrain with quartz-rich (less soluble) minerals?
+
+A. State the appropriate null and alternative hypotheses to see if conductance values are the same in the two forks.
+Ho: There is no difference in mean conductance between the South Fork and North Fork.
+u_NF - U_SF = 0
+
+Ha: The North Fork has a higher mean conductance than the South Fork.
+u_NF - u_SF > 0
+
+B. Determine whether a parametric or nonparametric test should be used.
+The plots are approximately normal when graphed, the variance is reasonably homogenous (0.5 < 1.1 < 2), and the observations are independent. Therefore we can use a parametric test.
+
+C. Compute an α=0.05 test and report the results.
+The p-value is 0.03373, which is less than our alpha of 0.05, so we can conclude that the North Fork does have a significantly higher conductance than the South Fork.
+t: 1.9458
+p-value: 0.03373
+alpha: 0.05
+df: 18
+
+D. Estimate the amount by which the forks differ in conductance, regardless of the test outcome.
+The mean conductance of the forks differs by 64.7 micrograms/liter.
+
+E. Illustrate and check the results with a plot.
+The plots confirm my findings.
+```{r}
+#3. Does the North Fork, which drains terrain with calcareous (more soluble) minerals have higher conductance than the South Fork, which drains terrain with quartz-rich (less soluble) minerals?
+
+#Import data
+library(tidyverse)
+Shenandoah <- read_csv("shenandoah.csv")
+
+NF <- Shenandoah$NORTH
+NF
+
+SF <- Shenandoah$SOUTH
+SF
+
+
+#B. Determine whether a parametric or nonparametric test should be used.
+#Normality
+qqnorm(NF)
+qqline(NF)
+
+qqnorm(SF)
+qqline(SF)
+
+
+#Equal variance
+s3_NF <- sd(NF)
+s3_NF
+
+s3_SF <- sd(SF)
+s3_SF
+
+VR_3 = s3_NF/s3_SF
+VR_3 # variance ratio; also determines whether to use Welch's or pooled
+
+
+#C. Compute an α=0.05 test and report the results.
+t.test(NF, SF, alternative = c("greater"), mu = 0, paired = FALSE, var.equal = TRUE, conf.level = 0.95)
+
+#D. Estimate the amount by which the forks differ in conductance, regardless of the test outcome.
+NFminusSF <- 343.9 - 279.2
+NFminusSF
+
+#E. Illustrate and check the results with a plot.
+plot()
+```
+
