@@ -6,7 +6,7 @@ output: html_document
 ---
 
 1. Conduct a t-test using the “head corn” yield data shown below. Can you guess/explain where the 14:1 odds come from?
-The 14:1 odds may come from an examination of the p value, wich is 0.9391. With 14:1 odds, you have a 93% probability of one outcome happening.
+The 14:1 odds may come from an examination of the p value, wich is 0.06091. With 14:1 odds, you have a 93.33% probability of one outcome happening and a 6.67% of the other outcome happening.
 ```{r}
 # 1. Conduct a t-test using the “head corn” yield data shown below. Can you guess/explain where the 14:1 odds come from?
 
@@ -39,17 +39,20 @@ s1_KD <- sd(NKD)
 s1_KD
 
 VR_1 = s1_NKD/s1_KD
-VR_1 # variance ratio; also determines whether to use Welch's or pooled. There is a large varianc
+VR_1 # variance ratio; also determines whether to use Welch's or pooled. There is a large variance.
 
 #Conduct T test
-t.test(NKD, KD, alternative = c("greater"), mu = 0, paired = TRUE, var.equal = TRUE, conf.level = 0.95)
+t.test(NKD, KD, mu = 0, alternative = "less", paired = TRUE, var.equal = TRUE, conf.level = 0.95)
 ```
-2. Test whether the wells downgradient of remediation are significantly lower in molybdenum than the upgradient wells. Also test whether the mean concentration has changed with remediation
-The downgradient wells are not significantly lower in molybdenum because the p value of 0.06981 is greater than the alpha I chose of 0.05 so we accept the null hypothesis that there is no difference.
-```{r}
-#2. Test whether the wells downgradient of remediation are significantly lower in molybdenum than the upgradient wells. Also test whether the mean concentration has changed with remediation
+2. Test whether the mean concentration has changed with remediation. Test whether the wells downgradient of remediation are significantly lower in molybdenum than the upgradient wells. 
 
-#Hypotheses
+The p-value of our two tailed is 0.01041, which is smaller than our alpha of 0.05, so we reject the null and say there is a significant difference between upgradient and downgradient values.
+
+The p-value of our one tailed is 0.005206, which is smaller than our alpha of 0.05, then we reject the null. The downgradient values are significantly lower than the upgradient wells.
+```{r}
+#2. Test whether the wells downgradient of remediation are significantly lower in molybdenum than the upgradient wells (one tailed). Also test whether the mean concentration has changed with remediation (two tailed).
+
+#Hypotheses for one tailed
 #Ho: There is no difference in the mean concentrations of the upgradient and down gradient sites.
 #Ha: The mean concentration of the downgradient wells is significantly lower than the upgradient wells. (u_DG - u_UG < 0)
 
@@ -81,9 +84,16 @@ s2_DG
 VR_2 = s2_UG/s2_DG
 VR_2 # variance ratio; also determines whether to use Welch's or pooled
 
+#The variance is large here so I am going to use a non parametric test to evaluate the data.Also the sample is quite small.
+
+
+#test whether the mean concentration has changed with remediation
+wilcox.test(UG, DG, conf.int = 0.95)
 
 #are the wells downgradient of remediation are significantly lower in molybdenum than the upgradient wells?
-t.test(DG, UG, alternative = c("less"), mu = 0, paired = FALSE, var.equal = FALSE, conf.level = 0.95)
+wilcox.test(DG, UG, alternative = "less", conf.int = 0.95)
+
+
  
 ```
 
@@ -107,10 +117,10 @@ alpha: 0.05
 df: 18
 
 D. Estimate the amount by which the forks differ in conductance, regardless of the test outcome.
-The mean conductance of the forks differs by 64.7 micrograms/liter.
+The median conductance of the forks differs by about 65 micrograms/liter.
 
 E. Illustrate and check the results with a plot.
-The plots confirm my findings.
+The plots confirm my findings that the means are different.
 ```{r}
 #3. Does the North Fork, which drains terrain with calcareous (more soluble) minerals have higher conductance than the South Fork, which drains terrain with quartz-rich (less soluble) minerals?
 
@@ -149,10 +159,57 @@ VR_3 # variance ratio; also determines whether to use Welch's or pooled
 t.test(NF, SF, alternative = c("greater"), mu = 0, paired = FALSE, var.equal = TRUE, conf.level = 0.95)
 
 #D. Estimate the amount by which the forks differ in conductance, regardless of the test outcome.
-NFminusSF <- 343.9 - 279.2
-NFminusSF
+#Using median as measure of central tendency because the data is skewed.
+hist(NF)
+hist(SF)
+
+median_NF <- median(NF)
+median_NF
+
+median_SF <- median(SF)
+median_SF
+
+compare_median <- median_NF - median_SF
+compare_median
+
 
 #E. Illustrate and check the results with a plot.
-plot()
+boxplot(UG, DG,
+ names=c("Upgraident","Downgradient"),
+ ylab="Concentrations")
+title("Concentration by Location",cex=0.8) 
+
+
+```
+
+4. Determine whether the pH of samples taken from three sets of piezometers are identical. If not identical, which groups are different from others? Which are contaminated? Be sure to check the normality and equal variance assumptions of ANOVA if using this parametric method.
+Independent: group name (classified as item)
+Dependent: pH values (classified as numeric)
+The pH values are not identical because the p-value of 0.00209 is less than I alpha I set of 0.05. Using the Tukey method, I can see that there is a significant difference between groups 1 and 2, as well as groups 3 and 2.
+```{r}
+#4. Determine whether the pH of samples taken from three sets of piezometers are identical. If not identical, which groups are different from others? Which are contaminated? Be sure to check the normality and equal variance assumptions of ANOVA if using this parametric method.
+group1 <- c(7.0, 7.2, 7.5, 7.7, 8.7, 7.8)
+mean(group1)
+
+group2 <- c(6.3, 6.9, 7.0, 6.4, 6.8, 6.7)
+mean(group2)
+
+group3 <- c(8.4, 7.6, 7.5, 7.4, 9.3, 9.0)
+mean(group2)
+
+groups <- data.frame(group1, group2, group3)
+groups
+
+gathered_groups <- gather(groups, key = "group", value = "pH")
+gathered_groups
+
+pH_ANOVA <- aov(pH ~ group, gathered_groups)
+summary(pH_ANOVA)
+
+TukeyHSD(pH_ANOVA, conf.level = 0.95)
+plot(TukeyHSD(pH_ANOVA, conf.level = 0.95), las = 1)
+#aov(dependent~ independent, data)
+#create two column matrix to use ANOVA
+# pH ~ group
 ```
 
