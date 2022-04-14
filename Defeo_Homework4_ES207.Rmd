@@ -6,7 +6,7 @@ output: html_document
 ---
 
 1. Conduct a t-test using the “head corn” yield data shown below. Can you guess/explain where the 14:1 odds come from?
-The 14:1 odds may come from an examination of the p value, wich is 0.06091. With 14:1 odds, you have a 93.33% probability of one outcome happening and a 6.67% of the other outcome happening.
+The 14:1 odds may come from an examination of the p value, which is 0.06091. With 14:1 odds, you have a 93.33% probability of one outcome happening and a 6.67% of the other outcome happening.
 ```{r}
 # 1. Conduct a t-test using the “head corn” yield data shown below. Can you guess/explain where the 14:1 odds come from?
 
@@ -203,6 +203,28 @@ groups
 gathered_groups <- gather(groups, key = "group", value = "pH")
 gathered_groups
 
+#Determine whether a parametric or nonparametric test should be used.
+#Normality
+qqnorm(group1)
+qqline(group1)
+
+qqnorm(group2)
+qqline(group2)
+
+qqnorm(group3)
+qqline(group3)
+
+#Equal variance
+s4_NF <- sd(group1)
+s4_NF
+
+s4_group2 <- sd(group2)
+s4_group2
+
+s4_group3 <- sd(group3)
+s4_group3
+#Approximately normal and equal variance with independent observations so I am going to use a parametric test
+
 pH_ANOVA <- aov(pH ~ group, gathered_groups)
 summary(pH_ANOVA)
 
@@ -211,5 +233,129 @@ plot(TukeyHSD(pH_ANOVA, conf.level = 0.95), las = 1)
 #aov(dependent~ independent, data)
 #create two column matrix to use ANOVA
 # pH ~ group
+```
+
+5. Determine whether chloride concentrations differ among springs emanating from the three rock types. If differences occur, which rock types differ from the others? Check the assumptions of ANOVA before using it.
+Chloride concentrations do differ between rock types according to an ANOVA. The p value of 0.0231 is less than the the alpha I assigned of 0.05. Using the Tukey method, I determined that grano and ephemer are significantly different from each other. We can see that because in the plot the bars do not cross zero and the p-value of 0.0351578 is less than the alpha of 0.05 I assigned. The other two combinations have p-values greater than 0.05 and they do have lines that cross zero in the plot.
+```{r}
+#5. Determine whether chloride concentrations differ among springs emanating from the three rock types. If differences occur, which rock types differ from the others? Check the assumptions of ANOVA before using it.
+#Import data
+library(tidyverse)
+rocks <- read.csv("feth.csv")
+rocks
+
+chloride <- rocks$Chloride
+type <- rocks$rocktype
+
+grano <- chloride[1:18]
+grano
+
+monzon <- chloride[19:35]
+monzon
+
+ephemer <- chloride[36:50]
+ephemer
+
+#Check ANOVA assumptions
+#Normality
+qqnorm(grano)
+qqline(grano)
+
+qqnorm(monzon)
+qqline(monzon)
+
+qqnorm(ephemer)
+qqline(ephemer)
+
+#Equal variance
+s5_grano <- sd(grano)
+s5_grano
+
+s5_monzon <- sd(monzon)
+s5_monzon
+
+s5_ephemer<- sd(ephemer)
+s5_ephemer
+#There is some variation from normal in this data set; I am still going to preform an ANOVA because that's what this section of the homework is about, but I recognize that assuming normal distribution for this may be a bit of a stretch.
+
+
+rocks_ANOVA <- aov(chloride ~ type, rocks)
+summary(rocks_ANOVA)
+
+TukeyHSD(rocks_ANOVA, conf.level = 0.95)
+plot(TukeyHSD(rocks_ANOVA, conf.level = 0.95))
+
+
+```
+
+6. Test the Corbicula data to determine whether either season or year are significant factors for the number of organisms observed. If significant effects are found, test for which levels of the factor differ from others.
+Both year and season have p-values less than the alpha I assigned of 0.05 (0.000986 and 5.69e-05 respectively) so they are each significant factors.For year, 1971 - 1969 has a p-value of 0.0006494 which is less than my alpha of 0.05 so that is a significant level. The other two have p-values greater than 0.05 so they are not significant. For season, Winter - Fall (p-value: 0.0007254), Winter-Spring (p-value: 0.0006643), and Winter-Summer (p-value: 0.0000959) are significant because their p-values are less than our alpha of 0.05. The other combinations have p-values greater than 0.05 so they are not significant.
+
+```{r}
+#6. Test the Corbicula data to determine whether either season or year are significant factors for the number of organisms observed. If significant effects are found, test for which levels of the factor differ from others.
+library(tidyverse)
+corb <- read.csv("Corb.csv", colClasses = c("Corbicula" = "numeric", "yr" = "factor", "seas" = "factor", "grp" = "factor"))
+corb
+
+
+corb_ANOVA <- aov(Corbicula ~ yr * seas, corb)
+summary(corb_ANOVA)
+
+TukeyHSD(corb_ANOVA, conf.level = 0.95)
+plot(TukeyHSD(corb_ANOVA, conf.level = 0.95))
+
+```
+
+7a. Are uranium concentrations correlated with total dissolved solids in the groundwater samples? If so, describe the strength of the relation.
+There is a weak positive correlation between tds and uranium concentration in the groundwater samples, as the correlation coefficient is 0.216086. 
+
+7b. Is the relation significant for α=0.1?
+With an alpha of 0.1, the relation is significant because our p-value is 0.07945, which is less than our alpha.
+
+```{r}
+#7a. Are uranium concentrations correlated with total dissolved solids in the groundwater samples? If so, describe the strength of the relation.
+library(tidyverse)
+uranium_data <- read.csv("urantds2.csv")
+uranium_data
+
+uranium <- uranium_data$URANIUM
+
+tds <- uranium_data$TDS
+
+cor(uranium, tds)
+
+
+#7b. Is the relation significant for α=0.1?
+cor.test(tds, uranium, 
+         alternative = "greater",
+         conf.level = 0.90,
+         method = c("pearson"))
+
+```
+
+CQ1. Using this information and dataset, determine whether at least one laboratory provided higher/lower results than the others. If so, determine which labs differ from others. Please include the following in your analysis:
+
+A. Conduct a nonparametric test to determine if at least one laboratory is different from the others. In particular, use either the Friedman test OR the Aligned-ranks test (ART)
+The p-value of 2.295e-08 is less than the alpha I assigned of 0.05. This means that at least one laboratory is different from the others.
+
+B. With the samples as blocks, perform a two-way ANOVA without replication to decide whether at least one laboratory provided higher/lower results than the others. C. If you determine that there is a difference among the labs, Use a multiple comparison test (e.g., Tukey, Holm’s) to determine which labs differ from others E. Briefly summarize the results and conclusions of your analysis
+According to my two way ANOVA without replication, there is not a significant difference between labs (p-value: 0.2770), but there is a significant difference between samples (p-value: 0.0104). This means that there are different results between the parametric and non parametric test.
+```{r}
+#CQ1. Using this information and dataset, determine whether at least one laboratory provided higher/lower results than the others. If so, determine which labs differ from others. Please include the following in your analysis:
+library(tidyverse)
+lab <- read.csv("allbac.csv")
+lab
+
+#A. Conduct a nonparametric test to determine if at least one laboratory is different from the others. In particular, use either the Friedman test OR the Aligned-ranks test (ART)
+friedman.test(lab$AllBac, lab$LabNo, lab$Sample)
+
+#B. With the samples as blocks, perform a two-way ANOVA without replication to decide whether at least one laboratory provided higher/lower results than the others. C. If you determine that there is a difference among the labs, Use a multiple comparison test (e.g., Tukey, Holm’s) to determine which labs differ from others E. Briefly summarize the results and conclusions of your analysis
+lab_ANOVA <- aov(lab$AllBac ~ lab$LabNo + lab$Sample)
+summary(lab_ANOVA)
+
+
+#Hg.aov=(aov(Hg~Site.hg+Date.hg))
+# summary(Hg.aov)
+
 ```
 
