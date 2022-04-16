@@ -185,7 +185,7 @@ title("Concentration by Location",cex=0.8)
 4. Determine whether the pH of samples taken from three sets of piezometers are identical. If not identical, which groups are different from others? Which are contaminated? Be sure to check the normality and equal variance assumptions of ANOVA if using this parametric method.
 Independent: group name (classified as item)
 Dependent: pH values (classified as numeric)
-The pH values are not identical because the p-value of 0.00209 is less than I alpha I set of 0.05. Using the Tukey method, I can see that there is a significant difference between groups 1 and 2, as well as groups 3 and 2.
+The pH values are not identical because the p-value of 0.00209 is less than I alpha I set of 0.05. Using the Tukey method, I can see that there is a significant difference between groups 1 and 2, as well as groups 3 and 2. Since group 2 is significantly different from both of the other groups, I am going to say that is the one group that is not contaminated.
 ```{r}
 #4. Determine whether the pH of samples taken from three sets of piezometers are identical. If not identical, which groups are different from others? Which are contaminated? Be sure to check the normality and equal variance assumptions of ANOVA if using this parametric method.
 group1 <- c(7.0, 7.2, 7.5, 7.7, 8.7, 7.8)
@@ -357,5 +357,77 @@ summary(lab_ANOVA)
 #Hg.aov=(aov(Hg~Site.hg+Date.hg))
 # summary(Hg.aov)
 
+```
+
+CQ2. Using this information and dataset, determine whether tillage methods affect TP loading. Please include the following in your analysis:
+
+A. Estimate the mean TP loading for each tillage method
+Conventional has the largest TP loading, while no till has the smallest TP loading.
+Conservation: 2.3
+Conventional: 3.0
+No till: 0.2
+Pasture: 1.9
+
+B. Discuss briefly whether logarithm transformation is necessary
+The data is positively skewed as seen in the histogram of total phosphorus loading so a logarithmic transformation would be logical to do.
+
+C. Use a statistical test to study whether different tillage methods resulted in different TP loading (state the null and alternative hypothesis, conduct the test, report the result).
+I think given that the next section says to transform the data that the expectation for this section is to not transform the data before analysis despite it being skewed. Therefore I will use a nonparametric test.
+Ho: There will be no difference in the mean TP load between methods.
+Ha: There will be a difference in the mean TP load between methods.
+Because this data is not normal, I would use a nonparametric test. I chose to use the Kruskal-Wallis rank sum test. The p-value is 8.076e-13. Because the p-value is less than the alpha I set of 0.05, I reject the null and say there is a significant difference in TP loads between methods.
+
+D. Fit two ANOVA models using (1.) log TP loading (log(TPLoad)) and (2) the square root of the square root of TP loading (TPLoad ^ 0.25) as the response and tillage method as the predictor.
+I fit both ANOVA models; see below code.
+
+E. Briefly summarize the results and conclusions of your analysis.
+The logarithmic transformation had a p-value of 1.38e-12 and residuals sum of squares of 523.1. The square root transformation had a p-value of 1.38e-13 and a residuals sum of squares of 28.586. All of my tests, parametric and nonparametric, conclude that there is a significant difference between TP load and tillage method. The square root transformation appears to have provided the best test because it was combined with ANOVA, which is a parametric test and therefore stronger than the non parametric and allows us to make comments beyond the sample to the population, and it had a lower sum of squares for the residuals than the ANOVA done for the log transformation.
+
+```{r}
+#CQ2. Using this information and dataset, determine whether tillage methods affect TP loading. Please include the following in your analysis:
+library(tidyverse)
+agdata <- read.csv("agWQdata.csv")
+agdata
+
+#A. Estimate the mean TP loading for each tillage method
+sortedag <- agdata[order(agdata$Tillage),]
+sortedag
+
+conservation <- agdata$TPLoad[1:41]
+conservation
+conservation_mean <- mean(conservation)
+
+conventional <- agdata$TPLoad[42:117]
+conventional
+conventional_mean <- mean(conventional)
+
+notill <- agdata$TPLoad[118:136]
+notill
+notill_mean <- mean(notill)
+
+pasture <- agdata$TPLoad[137:222]
+pasture
+pasture_mean <- mean(pasture)
+
+#B. Discuss briefly whether logarithm transformation is necessary
+hist(agdata$TPLoad)
+
+#C. Use a statistical test to study whether different tillage methods resulted in different TP loading (state the null and alternative hypothesis, conduct the test, report the result).
+kruskal.test(agdata$TPLoad ~ agdata$Tillage, data = agdata)
+
+
+#D. Fit two ANOVA models using (1.) log TP loading (log(TPLoad)) and (2) the square root of the square root of TP loading (TPLoad ^ 0.25) as the response and tillage method as the predictor.
+log_TP <- log(agdata$TPLoad)
+log_TP
+
+root_TP <- ((agdata$TPLoad)^0.25)
+root_TP
+
+#aov(dependent~ independent, data)
+log_ANOVA <- aov(log_TP ~ agdata$Tillage, agdata)
+summary(log_ANOVA)
+
+root_ANOVA <- aov(root_TP ~ agdata$Tillage, agdata)
+summary(root_ANOVA)
 ```
 
