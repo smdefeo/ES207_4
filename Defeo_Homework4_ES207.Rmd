@@ -354,8 +354,7 @@ lab_ANOVA <- aov(lab$AllBac ~ lab$LabNo + lab$Sample)
 summary(lab_ANOVA)
 
 
-#Hg.aov=(aov(Hg~Site.hg+Date.hg))
-# summary(Hg.aov)
+
 
 ```
 
